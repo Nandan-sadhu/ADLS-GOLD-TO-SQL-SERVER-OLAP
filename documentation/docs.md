@@ -49,7 +49,7 @@
 
     DEPARTMENT (M)	Cost Centers: A master registry defining company divisions and departments, used to organize employees and track financial allocations per cost center.
 
-![TMS ER DIAGRAM](images/TMS_ER.png)
+![TMS ER DIAGRAM](images/OLAP_ER.png)
 
 ## ABOUT THE DATA IN ADLS AFTER JOINING DIFFERENT TABLES TO CREATE JUST BEFORE FACT AND DIMENSION TABLES (TILL NOW SCD NOT DONE)
 
