@@ -24,7 +24,13 @@
         └── gold_log    --> delta tracking, execution timestamps
 
 ## STEP 1: CREATING SCHEMA
-         FILE NAME DDL_SCHEMA.SQL
+         FILE NAME ddl_schema.sql
+
+## STEP 2: CREATING ETL CONTOL TABLES WITH SEEDING THE PRIORITY ORDERS
+         FILE NAME etl_contolable_priority.sql
+
+## STEP 3: 
+
 
 ## STEP 1:
 
