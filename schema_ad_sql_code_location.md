@@ -7,6 +7,25 @@
 
 ### --------------------------------------------------------------------------
 
+#### [Database] consist of following schema
+        ├── staging     --> raw landing area (Truncate/Reload)
+             ├──
+             ├──
+             ├──
+             ├──
+        ├── gold_tables --> production analytics (Facts + Dimensions mixed)
+             ├──
+             ├──
+             ├──
+             ├──
+        ├── etl         --> control records, execution configurations
+             ├──   bulk_control_table
+             ├──   incremental_contol_table
+        └── gold_log    --> delta tracking, execution timestamps
+
+## STEP 1: CREATING SCHEMA
+         FILE NAME DDL_SCHEMA.SQL
+
 ## STEP 1:
 
 Create all **target dimension tables (DDL)** in SQL Server.
