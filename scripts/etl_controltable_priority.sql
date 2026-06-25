@@ -2,7 +2,7 @@ USE OLAPDB;
 GO
 
 -- Safe drop if re-running
-DROP TABLE IF EXISTS etl.bulk_load_control_table;
+DROP TABLE IF EXISTS etl.inc_load_control_table;
 DROP TABLE IF EXISTS etl.full_load_control_table;
 DROP TABLE IF EXISTS gold_log.watermark_table;
 GO
@@ -21,7 +21,7 @@ CREATE TABLE etl.full_load_control_table (
 );
 
 -- 2. Incremental/Bulk Load Control
-CREATE TABLE etl.bulk_load_control_table (
+CREATE TABLE etl.inc_load_control_table (
     TARGET_SCHEMA VARCHAR(50) NOT NULL DEFAULT 'gold_tables',
     TABLENAME VARCHAR(100) NOT NULL,
     STAGING_SCHEMA VARCHAR(50) NOT NULL DEFAULT 'staging',
@@ -75,14 +75,14 @@ GO
 -- =========================================================================
 -- B. SEEDING THE BULK / INCREMENTAL LOAD CONTROL TABLE
 -- =========================================================================
-INSERT INTO etl.bulk_load_control_table 
+INSERT INTO etl.inc_load_control_table 
     (TARGET_SCHEMA, TABLENAME, STAGING_SCHEMA, STAGINGTABLENAME, PROCEDURENAME, LOADTYPE, LOADORDER, ISACTIVE) 
 VALUES
-    ('gold_tables', 'EMPLOYEE', 'staging', 'employee', 'etl.usp_bulk_load_employee', 'SCD1', 1, 1),
-    ('gold_tables', 'DRIVER',   'staging', 'driver',   'etl.usp_bulk_load_driver',   'SCD1', 1, 1),
-    ('gold_tables', 'TRUCK',    'staging', 'truck',    'etl.usp_bulk_load_truck',    'SCD1', 1, 1),
-    ('gold_tables', 'CUSTOMER', 'staging', 'customer', 'etl.usp_bulk_load_customer', 'SCD2', 2, 1),
-    ('gold_tables', 'PRODUCT',  'staging', 'product',  'etl.usp_bulk_load_product',  'SCD2', 2, 1),
-    ('gold_tables', 'VENDOR',   'staging', 'vendor',   'etl.usp_bulk_load_vendor',   'SCD2', 2, 1),
-    ('gold_tables', 'FACTTRIP', 'staging', 'facttrip', 'etl.usp_bulk_load_facttrip', 'FACT', 3, 1);
+    ('gold_tables', 'EMPLOYEE', 'staging', 'employee', 'etl.usp_inc_load_employee', 'SCD1', 1, 1),
+    ('gold_tables', 'DRIVER',   'staging', 'driver',   'etl.usp_inc_load_driver',   'SCD1', 1, 1),
+    ('gold_tables', 'TRUCK',    'staging', 'truck',    'etl.usp_inc_load_truck',    'SCD1', 1, 1),
+    ('gold_tables', 'CUSTOMER', 'staging', 'customer', 'etl.usp_inc_load_customer', 'SCD2', 2, 1),
+    ('gold_tables', 'PRODUCT',  'staging', 'product',  'etl.usp_inc_load_product',  'SCD2', 2, 1),
+    ('gold_tables', 'VENDOR',   'staging', 'vendor',   'etl.usp_inc_load_vendor',   'SCD2', 2, 1),
+    ('gold_tables', 'FACTTRIP', 'staging', 'facttrip', 'etl.usp_inc_load_facttrip', 'FACT', 3, 1);
 GO
