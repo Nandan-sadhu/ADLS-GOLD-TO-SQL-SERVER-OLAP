@@ -35,6 +35,14 @@
 ## STEP 4: CREATE THE STAGING TABLES IN STAGING SCHEMA
         FILE NAME staging.sql 
 
+        Purpose:
+                * Full load historical data
+                * Incremental daily data
+
+        Pattern:
+                * TRUNCATE
+                * RELOAD
+
 ## STEP 5: CREATE ALL BULK/FULL LOAD PROCEDURES WITH UPDATING THE WATERMARK TABLES
         FILE NAMES 
                         full_load_customer.sql
@@ -50,167 +58,51 @@
 
         identity_update.sql
 
-## STEP 1:
+## STEP 5: CREATE ALL INCREMENTAL LOAD PROCEDURES WITH UPDATING THE WATERMARK TABLES
+        FILE NAMES 
+                        incload_scd1_emp_driver_truck.sql
+                        incload_scd2_cust_prd_ven.sql
+                        incload_fact.sql
 
-Create all **target dimension tables (DDL)** in SQL Server.
-**SCD2 tables:**
 
-    * surrogate_key
-    * effective_start_date
-    * effective_end_date
-    * is_current
 
-**SCD1 tables:**
 
-    * optional surrogate_key
-    * no history columns needed
 
----
+## STEP 6: Phase A: The Full Load Pipeline (PL_ORCHESTRATOR_FULL)
 
-## STEP 2:
+        [ADF Lookup: Read Distinct LoadOrder] 
+                 ↓
+        [ForEach Activity: Loop through LoadOrder sequentially (1 -> 2 -> 3)]
+                 ↓
+        Inside the ForEach Container:
+        [ADF Lookup: Fetch Tables & Procedures where LOADORDER = Current Index]
+                 ↓
+        [ForEach Activity (Parallel Mode Enabled): Run Tables Simultaneously]
+                 ↓
+        1. Clear Target Staging Table
+        2. ADF Copy Activity: Stream file from ADLS Gold -> SQL Staging
+        3. Stored Procedure Activity: Execute etl.usp_full_load_[TableName] 
+           (Passes @pipeline().TriggerTime to handle internal watermarking)
 
-Create **staging tables (DDL)** in SQL Server for every dimension table.
 
-Purpose:
-* Full load historical data
-* Incremental daily data
+## STEP 7: Phase B: The Incremental Load Pipeline (PL_ORCHESTRATOR_INCREMENTAL)
 
-Pattern:
-* TRUNCATE
-* RELOAD
+        [ADF Lookup: Read Distinct LoadOrder from etl.incremental_load_control_table]
+                 ↓
+        [ForEach Activity: Loop through LoadOrder sequentially (1 -> 2 -> 3)]
+                 ↓
+        Inside the ForEach Container:
+        [ADF Lookup: Fetch Tables & Procedures where LOADORDER = Current Index]
+                 ↓
+        [ForEach Activity (Parallel Mode Enabled)]
+                 ↓
+        1. ADF Lookup: Get LAST_WATERMARK_DATE from gold_log.watermark_table
+        2. ADF Copy Activity: Stream Delta from ADLS Gold -> SQL Staging 
+           Filter: ModifiedDate > LastWatermark AND ModifiedDate <= PipelineTriggerTime
+        3. Stored Procedure Activity: Execute etl.usp_inc_load_[TableName]
+           (Executes Idempotent Upsert / SCD2 timeline split + updates Watermark internal to transaction)
+        4. Truncate Staging Table (Clean up space)
 
----
-
-## STEP 3:
-
-Create **watermark table**.
-
-Columns:
-
-    * table_name
-    * watermark_column
-    * last_watermark_date
-    * load_status
-    * updated_date
-
----
-
-## STEP 4:
-
-ADF **Full Load Copy Activity**
-
-Gold ADLS (5 years historical)
-↓
-SQL Server Staging Tables
-
-Load all historical data.
-
----
-
-## STEP 5:
-
-Run **Full Load Stored Procedures**
-
-### SCD2 Tables
-
-Create historical SCD2 using:
-
-    * LEAD()
-    * LAG()
-    * ROW_NUMBER()
-
-Generate:
-
-    * effective_start_date
-    * effective_end_date
-    * is_current
-
-### SCD1 Tables
-
-    Simple insert from staging → dimension. MERGE LOGIC
-
----
-
-## STEP 6:
-
-Create **Master Full Load Stored Procedure**
-
-Example:
-
-    EXEC all SCD1 full load procedures
-    EXEC all SCD2 full load procedures
-
-ADF calls:
-
-    EXEC usp_master_full_load
-
----
-
-## STEP 7:
-
-ADF **Incremental Copy Activity**
-
-Read watermark table.
-Filter:
-modified_date > watermark_date
-Gold Incremental Data
-↓
-SQL Staging Tables
-
-Before load:
-TRUNCATE staging tables
-
----
-
-## STEP 8:
-
-Run **Incremental Stored Procedures**
-
-### SCD2 Tables
-
-If tracked columns changed:
-
-    1. Expire old row
-       is_current = 'N'
-       effective_end_date = GETDATE()
-
-    2. Insert new row
-       is_current = 'Y'
-       effective_start_date = GETDATE()
-
-### SCD1 Tables
-
-MERGE logic:
-
-    WHEN MATCHED → UPDATE
-    WHEN NOT MATCHED → INSERT
-
----
-
-## STEP 9:
-
-Create **Master Incremental Stored Procedure**
-
-Execute all:
-
-    * SCD1 incremental procedures
-    * SCD2 incremental procedures
-
-ADF calls:
-
-    EXEC usp_master_incremental_load
-
----
-
-## STEP 10:
-
-Update **watermark table**
-
-Only after successful incremental load.
-Set:
-last_watermark_date = MAX(modified_date)
-
----
 
 ## FINAL FLOW
 
