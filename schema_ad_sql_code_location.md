@@ -29,8 +29,26 @@
 ## STEP 2: CREATING ETL CONTOL TABLES WITH SEEDING THE PRIORITY ORDERS
          FILE NAME etl_contolable_priority.sql
 
-## STEP 3: 
+## STEP 3: CREATING FACT AND DIM TABLES IN GOLD_TABLES SCHEMA
+        FILE NAME ddl_fact_dim_tables.sql
 
+## STEP 4: CREATE THE STAGING TABLES IN STAGING SCHEMA
+        FILE NAME staging.sql 
+
+## STEP 5: CREATE ALL BULK/FULL LOAD PROCEDURES WITH UPDATING THE WATERMARK TABLES
+        FILE NAMES 
+                        full_load_customer.sql
+                        full_load_driver.sql
+                        full_load_employee.sql
+                        full_load_product.sql
+                        full_load_truck.sql
+                        full_load_vendor.sql
+                        full_load_facttrip.sql
+
+## STEP 6: Essential Pre-Execution Step: Dimension Seeding
+        Because we implemented your fallback -1 default tracking model, you must execute this script one time          to insert default rows into your active dimensions, or your fact table foreign keys will block                 execution.
+
+        identity_update.sql
 
 ## STEP 1:
 
